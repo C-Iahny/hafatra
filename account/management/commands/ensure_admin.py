@@ -17,16 +17,24 @@ class Command(BaseCommand):
             self.stdout.write("ADMIN_PASSWORD non défini — commande ignorée.")
             return
 
-        if User.objects.filter(username=username).exists():
-            self.stdout.write(f"Superutilisateur '{username}' existe déjà.")
-            return
+        # Supprimer les utilisateurs cassés (email = username au lieu d'une vraie adresse)
+        broken = User.objects.filter(email=username)
+        if broken.exists():
+            broken.delete()
+            self.stdout.write(f"Utilisateur cassé supprimé (email='{username}').")
 
-        if User.objects.filter(email=email).exists():
-            self.stdout.write(f"Email '{email}' déjà utilisé — supprime l'utilisateur cassé en base d'abord.")
+        # Si le bon utilisateur existe déjà, on met juste le mot de passe à jour
+        existing = User.objects.filter(username=username).first()
+        if existing:
+            existing.set_password(password)
+            existing.is_superuser = True
+            existing.is_staff = True
+            existing.save()
+            self.stdout.write(f"Superutilisateur '{username}' mis à jour.")
             return
 
         try:
             User.objects.create_superuser(username=username, email=email, password=password)
             self.stdout.write(self.style.SUCCESS(f"Superutilisateur '{username}' créé."))
         except IntegrityError as e:
-            self.stdout.write(f"Erreur : {e}")
+            self.stdout.write(f"Erreur création : {e}")
