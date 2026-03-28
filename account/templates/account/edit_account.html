@@ -326,8 +326,10 @@
     function isImageSizeValid(image) {
         var startIndex = image.indexOf("base64,") + 7;
         var base64str = image.substr(startIndex);
-        var decoded = atob(base64str);
-        if (decoded.length >= "{{ DATA_UPLOAD_MAX_MEMORY_SIZE }}") return null;
+        // Calcul rapide de la taille en octets depuis la longueur base64 (sans atob qui bloque le navigateur)
+        var approxBytes = (base64str.length * 3) / 4;
+        var maxBytes = {{ DATA_UPLOAD_MAX_MEMORY_SIZE }};
+        if (approxBytes >= maxBytes) return null;
         return base64str;
     }
 
@@ -344,16 +346,16 @@
                     "cropX": cropX, "cropY": cropY,
                     "cropWidth": cropWidth, "cropHeight": cropHeight
                 },
-                timeout: 10000,
+                timeout: 30000,
                 success: function(data) {
                     if (data.result == "success") { document.getElementById("id_cancel").click(); }
                     else if (data.result == "error") { alert(data.exception); document.getElementById("id_cancel").click(); }
                 },
-                error: function(data) { console.error("ERROR...", data); },
+                error: function(data) { console.error("Erreur crop image:", data); },
                 complete: function(data) { displayLoadingSpinner(false); }
             });
         } else {
-            alert("Choisissez une image de moins de 10 Mo.");
+            alert("Choisissez une image de moins de 20 Mo.");
             document.getElementById("id_cancel").click();
         }
     }
