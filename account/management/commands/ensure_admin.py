@@ -1,6 +1,7 @@
 import os
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
+from django.db import IntegrityError
 
 
 class Command(BaseCommand):
@@ -8,21 +9,24 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         User = get_user_model()
-        username = os.environ.get('ADMIN_USERNAME', 'Admin')
-        email    = os.environ.get('ADMIN_EMAIL', 'miarisoa00@yahoo.de')
-        password = os.environ.get('ADMIN_PASSWORD', 'Kanto001!')
+        username = os.environ.get('ADMIN_USERNAME', 'admin')
+        email    = os.environ.get('ADMIN_EMAIL', 'admin@example.com')
+        password = os.environ.get('ADMIN_PASSWORD', '')
 
         if not password:
-            self.stderr.write("ADMIN_PASSWORD non défini — commande ignorée.")
+            self.stdout.write("ADMIN_PASSWORD non défini — commande ignorée.")
             return
 
         if User.objects.filter(username=username).exists():
             self.stdout.write(f"Superutilisateur '{username}' existe déjà.")
-        else:
+            return
+
+        if User.objects.filter(email=email).exists():
+            self.stdout.write(f"Email '{email}' déjà utilisé — supprime l'utilisateur cassé en base d'abord.")
+            return
+
+        try:
             User.objects.create_superuser(username=username, email=email, password=password)
             self.stdout.write(self.style.SUCCESS(f"Superutilisateur '{username}' créé."))
-```
-
-**`Procfile`** → remplace par :
-```
-web: python manage.py collectstatic --noinput && python manage.py migrate --noinput && python manage.py ensure_admin && daphne -b 0.0.0.0 -p $PORT ZOOT.routing:application
+        except IntegrityError as e:
+            self.stdout.write(f"Erreur : {e}")
