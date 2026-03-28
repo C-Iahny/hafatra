@@ -281,10 +281,8 @@ def edit_account_view(request, *args, **kwargs):
 def save_temp_profile_image_from_base64String(imageString, user):
 	INCORRECT_PADDING_EXCEPTION = "Incorrect padding"
 	try:
-		if not os.path.exists(settings.TEMP):
-			os.mkdir(settings.TEMP)
-		if not os.path.exists(settings.TEMP + "/" + str(user.pk)):
-			os.mkdir(settings.TEMP + "/" + str(user.pk))
+		# os.makedirs crée tous les dossiers parents si nécessaire (important sur Railway)
+		os.makedirs(settings.TEMP + "/" + str(user.pk), exist_ok=True)
 		url = os.path.join(settings.TEMP + "/" + str(user.pk),TEMP_PROFILE_IMAGE_NAME)
 		storage = FileSystemStorage(location=url)
 		image = base64.b64decode(imageString)
