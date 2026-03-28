@@ -1,0 +1,11 @@
+[build]
+# Nixpacks installe automatiquement les dépendances depuis requirements.txt
+builder = "nixpacks"
+
+[deploy]
+# Collectstatic + migrations + démarrage du serveur ASGI (WebSockets supportés)
+startCommand = "python manage.py collectstatic --noinput && python manage.py migrate --noinput && daphne -b 0.0.0.0 -p $PORT ZOOT.routing:application"
+healthcheckPath = "/"
+healthcheckTimeout = 100
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
