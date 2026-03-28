@@ -46,13 +46,6 @@ class AccountAuthenticationForm(forms.ModelForm):
                 raise forms.ValidationError("Invalid login")
 
 
-ACCEPTED_IMAGE_TYPES = (
-    'image/jpeg', 'image/jpg', 'image/png', 'image/gif',
-    'image/webp', 'image/bmp', 'image/tiff', 'image/heic', 'image/heif',
-)
-ACCEPTED_IMAGE_EXTENSIONS = '.jpg,.jpeg,.png,.gif,.webp,.bmp,.tiff,.tif,.heic,.heif'
-
-
 class AccountUpdateForm(forms.ModelForm):
 
     bio = forms.CharField(
@@ -70,11 +63,6 @@ class AccountUpdateForm(forms.ModelForm):
     class Meta:
         model = Account
         fields = ('username', 'email', 'profile_image', 'hide_email', 'bio', 'location')
-        widgets = {
-            'profile_image': forms.FileInput(attrs={
-                'accept': ACCEPTED_IMAGE_EXTENSIONS,
-            }),
-        }
 
     def clean_email(self):
         email = self.cleaned_data['email'].lower()
